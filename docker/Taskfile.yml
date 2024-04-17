@@ -1,0 +1,80 @@
+version: "3"
+
+vars:
+  REGISTRY_PREFIX: "{{.REGISTRY_PREFIX}}"
+  DOCKER_DIR: '{{default "_docker" .DOCKER_DIR}}' # 可选
+  OUTPUT_DIR: '{{default "_output" .OUTPUT_DIR}}' # 可选
+
+tasks:
+  build:
+    desc: "制作并推送镜像"
+    vars:
+      NAME: "{{.NAME}}" # 必填，只传基本名
+      TAG: '{{default "latest" .TAG}}' # 可选
+
+      OS: '{{default "linux" .OS}}' # 可选
+      ARCH: '{{default "amd64" .ARCH}}' # 可选
+      BASE: '{{default "alpine:3.17" .BASE}}' # 可选
+      BUILD_ARGS: "BASE={{.BASE}} {{.BUILD_ARGS}}" # 可选，可额外指定构建参数
+      DOCKERFILE: '{{default "./Dockerfile" .DOCKERFILE}}' # 可选
+
+      _TARGET: "{{joinPath .REGISTRY_PREFIX .NAME}}:{{.TAG}}-{{.OS}}-{{.ARCH}}" # 自动生成，内部使用
+      _DOCKER_DIR: "{{.DOCKER_DIR}}/{{.OS}}/{{.ARCH}}"
+      _DST_BIN: "{{.DOCKER_DIR}}/{{.OS}}/{{.ARCH}}/bin"
+      _SRC_BIN: "{{.OUTPUT_DIR}}/{{.OS}}/{{.ARCH}}/{{.NAME}}"
+    cmds:
+      - mkdir -p {{._DST_BIN}}
+      - defer: rm -rfv {{._DOCKER_DIR}}
+      - cp -vf {{._SRC_BIN}}  {{._DST_BIN}} || true # TODO: 支持可选复制
+      - >-
+        docker build
+        --tag {{._TARGET}}
+        --file {{.DOCKERFILE}}
+        --platform={{.OS}}/{{.ARCH}}
+        --build-arg {{trim .BUILD_ARGS | splitList " " | join " --build-arg "}}
+        {{._DOCKER_DIR}}
+      - task: push
+        vars:
+          NAME: "{{.NAME}}"
+          TAG: "{{.TAG}}"
+          OS: '{{default "linux" .OS}}' # 可选
+          ARCH: '{{default "amd64" .ARCH}}' # 可选
+
+  push:
+    desc: "推送镜像"
+    vars:
+      NAME: "{{.NAME}}" # 必填，只传基本名
+      TAG: '{{default "latest" .TAG}}' # 可选
+
+      OS: '{{default "linux" .OS}}' # 可选
+      ARCH: '{{default "amd64" .ARCH}}' # 可选
+
+      _TARGET: "{{joinPath .REGISTRY_PREFIX .NAME}}:{{.TAG}}-{{.OS}}-{{.ARCH}}" # 自动生成，内部使用
+    cmds:
+      - docker push {{._TARGET}}
+
+  manifest:
+    desc: "制作发布包"
+    vars:
+      NAME: "{{.NAME}}" # 必填，只传基本名
+      TAG: '{{default "latest" .TAG}}' # 可选
+
+      OS: '{{default "linux" .OS}}' # TODO: 支持嵌套for循环，支持多系统
+      ARCHS: '{{default "amd64 arm64" .ARCHS}}'
+
+      _TARGET: "{{joinPath .REGISTRY_PREFIX .NAME}}:{{.TAG}}" # 自动生成，内部使用
+      _MANIFESTS: '{{splitList " " .ARCHS }}'
+    cmds:
+      - docker manifest rm {{._TARGET}} || true
+      - for: { var: ARCHS, as: ARCH }
+        cmd: >-
+          docker manifest create {{._TARGET}} {{._TARGET}}-{{.OS}}-{{.ARCH}} --amend &&
+          docker manifest annotate {{._TARGET}} {{._TARGET}}-{{.OS}}-{{.ARCH}} --os {{.OS}} --arch {{.ARCH}}
+      - docker manifest push {{._TARGET}}
+
+  clean:
+    desc: "清理构建镜像"
+    vars:
+      PATTERN: "{{.PATTERN}}"
+    cmds:
+      - docker rmi $(docker images | grep '{{.PATTERN}}' | awk '{print $3}')

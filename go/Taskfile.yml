@@ -1,0 +1,51 @@
+version: "3"
+
+vars:
+  DOCKER_DIR: '{{default "_docker" .DOCKER_DIR}}' # 可选
+  OUTPUT_DIR: '{{default "_output" .OUTPUT_DIR}}' # 可选
+  VERSION_PACKAGE: "{{.VERSION_PACKAGE}}"
+  LDFLAGS: >-
+    -s -w -buildid=
+    {{if .VERSION_PACKAGE}}
+    -X {{.VERSION_PACKAGE}}.GitVersion={{.VERSION}}
+    -X {{.VERSION_PACKAGE}}.GitCommit={{.GIT_COMMIT}}
+    -X {{.VERSION_PACKAGE}}.GitTreeState={{.GIT_TREE_STATE}}
+    -X {{.VERSION_PACKAGE}}.BuildDate={{.GIT_BUILD_DATE}}
+    {{end}}
+
+tasks:
+  check:
+    desc: "检查go mod"
+    cmds:
+      - go mod tidy
+      - >
+        if git status -s | grep -E 'go(.mod)|go(.sum)' ; then
+          echo 'Error: must run `go mod tidy` before commit!';
+          exit 1;
+        fi
+
+  build:
+    desc: "构建二进制"
+    vars:
+      OS: "{{default OS .OS}}"
+      ARCH: "{{default ARCH .ARCH}}"
+      OUTPUT_DIR: "{{.OUTPUT_DIR}}/{{.OS}}/{{.ARCH}}/"
+      PACKAGE: '{{default "." .PACKAGE}}'
+      LDFAGS: "{{.LDFLAGS}}"
+    cmds:
+      - mkdir -p {{.OUTPUT_DIR}}
+      - GOOS={{.OS}} GOARCH={{.ARCH}} go build -o {{.OUTPUT_DIR}} {{if .LDFLAGS}} -ldflags "{{.LDFLAGS}}"{{end}} {{.PACKAGE}}
+
+  test:
+    desc: "测试"
+    vars:
+      TIMEOUT: '{{default "10m" .TIMEOUT}}'
+      PACKAGE: '{{default "./..." .PACKAGE}}'
+      FLAGS: '{{default "-short -v" .PACKAGE}}'
+    cmds:
+      - go test -timeout={{.TIMEOUT}} {{.FLAGS}} ./...
+
+  clean:
+    desc: "清理本地构建输出"
+    cmds:
+      - rm -rfv {{.OUTPUT_DIR}}

@@ -1,0 +1,78 @@
+# https://taskfile.dev
+
+version: "3"
+
+vars:
+  VERSION:
+    sh: "git describe --always --tags --dirty"
+  LAST_VERSION:
+    sh: "git describe --tags --abbrev=0" # TODO: 考虑不存在tag的情况
+  GIT_COMMIT:
+    sh: "git rev-parse HEAD"
+  GIT_TREE_STATE:
+    sh: 'git diff-index --quiet HEAD && echo "clean" || echo "dirty"'
+  GIT_BUILD_DATE:
+    sh: 'date +"%Y-%m-%d"'
+
+tasks:
+  check:
+    desc: "检查当前工作目录"
+    cmds:
+      - git diff-index --quiet HEAD -- || { echo "发布前git状态必须保持为clean！"; git status; exit 1; }
+
+  tag:
+    desc: "打指定tag"
+    deps: [check]
+    vars:
+      VERSION: "{{.VERSION}}"
+      FLAGS: "{{.FLAGS}}"
+    cmds:
+      - git tag {{.FLAGS}} {{.VERSION}}
+      - git push origin {{.VERSION}}
+
+  untag:
+    desc: "删除指定tag，默认当前tag"
+    vars:
+    cmds:
+      - git tag -d {{.LAST_VERSION}}
+      - git push -d origin {{.LAST_VERSION}}
+
+  patch:
+    desc: "打一个补丁版本"
+    vars:
+      VERSION:
+        sh: echo {{.VERSION}} | awk -F. '{$3+=1; OFS="."; print $1, $2, $3}'
+    cmds:
+      - task: tag
+        vars:
+          VERSION: "{{.VERSION}}"
+
+  minor:
+    desc: "打一个特性版本"
+    vars:
+      VERSION:
+        sh: echo {{.VERSION}} | awk -F. '{$2+=1; $3=0; OFS="."; print $1, $2, $3}'
+    cmds:
+      - task: tag
+        vars:
+          VERSION: "{{.VERSION}}"
+
+  main:
+    desc: "打一个主版本"
+    vars:
+      VERSION:
+        sh: echo {{.VERSION}} | sed 's/^v//' | awk -F. '{$1+=1; $2=0; $3=0; OFS="."; print "v"$1, $2, $3}'
+    cmds:
+      - task: tag
+        vars:
+          VERSION: "{{.VERSION}}"
+
+  date:
+    desc: "打一个日期版本，如20230628-2720a35f"
+    vars:
+      VERSION:
+        sh: git --no-pager show --quiet --abbrev=8 --date='format-local:%Y%m%d' --format="%cd-%h"
+    cmds:
+      - task: tag
+        vars:
+          VERSION: "{{.VERSION}}"

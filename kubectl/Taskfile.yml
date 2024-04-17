@@ -1,0 +1,37 @@
+version: "3"
+
+vars:
+  CONTEXT: "{{.CONTEXT}}"
+  NAMESPACE: "{{.NAMESPACE}}"
+  KUBECTL: >-
+    kubectl
+    {{if .CONTEXT}}--context={{.CONTEXT}}{{end}}
+    {{if .NAMESPACE}}--namespace={{.NAMESPACE}}{{end}}
+  WORKLOAD: "{{.WORKLOAD}}"
+  CONTAINER: "{{.CONTAINER}}"
+
+set:
+  - nounset
+  - errexit
+  - pipefail
+
+tasks:
+  set-image:
+    desc: "更新镜像"
+    vars:
+      WORKLOAD: "{{.WORKLOAD}}"
+      CONTAINER: "{{.CONTAINER}}"
+      VERSION:
+        sh: >-
+          {{.KUBECTL}} get {{.WORKLOAD}} -ojson |
+          jq -r '.spec.template.spec.containers[] | select(.name == "{{.CONTAINER}}").image | sub(":.*"; ":{{.VERSION}}")'
+    cmds:
+      - "{{.KUBECTL}} set image {{.WORKLOAD}} {{.CONTAINER}}={{.VERSION}}"
+
+  undo:
+    desc: "回滚变更"
+    vars:
+      WORKLOAD: "{{.WORKLOAD}}"
+      CONTAINER: "{{.CONTAINER}}"
+    cmds:
+      - "{{.KUBECTL}} rollout undo {{.WORKLOAD}}"

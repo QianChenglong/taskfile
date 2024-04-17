@@ -1,0 +1,47 @@
+version: "3"
+
+includes:
+  tag: ./tag.yml
+
+tasks:
+  tag:
+    cmds:
+      - task: tag:tag
+
+  tag-1:
+    cmds:
+      - task: tag:tag
+        vars:
+          VERSION: v0.0.2
+
+  untag:
+    cmds:
+      - task: tag:untag
+
+  untag-1:
+    cmds:
+      - task: tag:untag
+        vars:
+          VERSION: v0.0.2
+
+  tag-fix:
+    desc: "打一个fix版本，默认使用当前版本号计算"
+    cmds:
+      - task: tag:fix
+
+  tag-fix-2:
+    desc: "打一个fix版本，指定当前版本号"
+    cmds:
+      - task: tag:fix
+        vars:
+          VERSION: v1.0.0
+
+  tag-feature:
+    desc: "打一个特性版本，默认使用当前版本号计算"
+    cmds:
+      - task: tag:feature
+
+  tag-date:
+    desc: "打一个日期版本"
+    cmds:
+      - task: tag:date

@@ -1,0 +1,74 @@
+version: 3
+
+includes:
+  # docker: https://raw.githubusercontent.com/QianChenglong/taskfile/main/docker/Taskfile.yml
+  go: ./go/Taskfile.yml
+  git: ./git/Taskfile.yml
+  docker:
+    taskfile: ./docker/Taskfile.yml
+    vars:
+      REGISTRY_PREFIX: "mirrors.tencent.com/kateway"
+  kubectl:
+    taskfile: ./kubectl/Taskfile.yml
+    vars:
+      CONTEXT:
+        sh: echo ${CONTEXT:service-controoler.dev}
+      NAMESPACE:
+        sh: echo ${NAMESPACE:kube-system}
+
+env:
+  ENV: dev
+
+dotenv: [".env", "{{.ENV}}/.env.", "{{.HOME}}/.env"]
+
+tasks:
+  check:
+    desc: "测试go:check"
+    cmds:
+      - task: go:check
+
+  build:
+    desc: "测试go:build"
+    cmds:
+      - task: go:build
+        vars:
+          LDFLAGS: "-s -w"
+
+  test:
+    desc: "测试go:test"
+    cmds:
+      - task: go:test
+        vars:
+          TIMEOUT: 1m
+
+  image:
+    desc: "测试docker:build"
+    cmds:
+      - task: docker:build
+        vars:
+          IMAGE: "test"
+          BUILD_ARGS: A=A B=B
+
+  clean:
+    desc: "测试go:clean"
+    cmds:
+      - task: go:clean
+      - task: docker:clean
+        vars:
+          PATTERN: "test"
+
+  set-image:
+    desc: "测试kubectl:set-image"
+    cmds:
+      - task: kubectl:set-image
+        vars:
+          WORKLOAD: deploy/nginx
+          CONTAINER: nginx
+          IMAGE: nginx
+
+  undo:
+    desc: "测试kubectl:undo"
+    cmds:
+      - task: kubectl:undo
+        vars:
+          WORKLOAD: deploy/nginx
