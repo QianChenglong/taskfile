@@ -1,5 +1,8 @@
 version: "3"
 
+env:
+  CGO_ENABLED: 0
+
 vars:
   DOCKER_DIR: '{{default "_docker" .DOCKER_DIR}}' # 可选
   OUTPUT_DIR: '{{default "_output" .OUTPUT_DIR}}' # 可选
