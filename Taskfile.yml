@@ -11,10 +11,11 @@ includes:
   kubectl:
     taskfile: ./kubectl/Taskfile.yml
     vars:
-      CONTEXT:
-        sh: echo ${CONTEXT:service-controoler.dev}
-      NAMESPACE:
-        sh: echo ${NAMESPACE:kube-system}
+      CONTEXT: '{{default "kateway.dev" .CONTEXT }}'
+      NAMESPACE: '{{default "kube-system" .NAMESPACE }}'
+      WORKLOAD: "deploy/service-controller"
+      CLUSTER_ID: "{{.CLUSTER_ID}}"
+      CLUSTER_TYPE: "{{.CLUSTER_TYPE}}"
 
 env:
   ENV: dev
@@ -57,14 +58,13 @@ tasks:
         vars:
           PATTERN: "test"
 
-  set-image:
+  update:
     desc: "测试kubectl:set-image"
     cmds:
       - task: kubectl:set-image
         vars:
-          WORKLOAD: deploy/nginx
-          CONTAINER: nginx
-          IMAGE: nginx
+          CONTAINER: service-controller
+          # IMAGE: nginx
 
   undo:
     desc: "测试kubectl:undo"

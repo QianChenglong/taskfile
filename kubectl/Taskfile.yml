@@ -1,14 +1,39 @@
 version: "3"
 
 vars:
-  CONTEXT: "{{.CONTEXT}}"
-  NAMESPACE: "{{.NAMESPACE}}"
+  CLUSTER_ID: "{{.CLUSTER_ID}}" # 指定集群ID，优先级比指定context高！
+  CLUSTER_TYPE: "{{.CLUSTER_TYPE}}" # 集群类型，host => 托管
+  CONTEXT: >-
+    {{- if .CLUSTER_ID -}} cls
+    {{- else}}{{.CONTEXT}}
+    {{- end}}
+  NAMESPACE: >-
+    {{- if .CLUSTER_ID}}
+      {{- if eq .CLUSTER_TYPE "host"}} {{- .CLUSTER_ID}}
+      {{- else}}kube-system
+      {{- end}}
+    {{- else}}{{.NAMESPACE}}
+    {{- end}}
   KUBECTL: >-
     kubectl
     {{if .CONTEXT}}--context={{.CONTEXT}}{{end}}
     {{if .NAMESPACE}}--namespace={{.NAMESPACE}}{{end}}
   WORKLOAD: "{{.WORKLOAD}}"
+  # FIXME: https://github.com/go-task/task/issues/1611
+  _WORKLOAD: >-
+    {{- if .CLUSTER_ID}}
+      {{- if eq .CLUSTER_TYPE "host"}}
+        {{- .WORKLOAD | replace "/" (printf "/%s-" .CLUSTER_ID)}}
+      {{- else -}} {{.WORKLOAD}}
+      {{- end}}
+    {{- else -}} {{.WORKLOAD}}
+    {{- end}}
   CONTAINER: "{{.CONTAINER}}"
+  _LOGIN: >-
+    {{- if .CLUSTER_ID -}} kubectl ianvs login {{.CLUSTER_ID}}
+      {{- if eq .CLUSTER_TYPE "host"}} --meta
+      {{- end}}
+    {{- end}}
 
 set:
   - nounset
@@ -19,19 +44,20 @@ tasks:
   set-image:
     desc: "更新镜像"
     vars:
-      WORKLOAD: "{{.WORKLOAD}}"
       CONTAINER: "{{.CONTAINER}}"
+      _CURRENT_VERSION:
+        sh: >-
+          {{if ._LOGIN}}{{._LOGIN}} 1>/dev/null && {{end}}
+          {{.KUBECTL}} get {{._WORKLOAD}} -ojson | jq -r '.spec.template.spec.containers[] | select(.name == "{{.CONTAINER}}").image'
       VERSION:
         sh: >-
-          {{.KUBECTL}} get {{.WORKLOAD}} -ojson |
-          jq -r '.spec.template.spec.containers[] | select(.name == "{{.CONTAINER}}").image | sub(":.*"; ":{{.VERSION}}")'
+          echo {{._CURRENT_VERSION}} | sed 's/:.*/:{{.VERSION}}/'
     cmds:
-      - "{{.KUBECTL}} set image {{.WORKLOAD}} {{.CONTAINER}}={{.VERSION}}"
+      - echo {{.CLUSTER_TYPE}}
+      - echo "{{._CURRENT_VERSION}} => {{.VERSION}}"
+      - "{{.KUBECTL}} set image {{._WORKLOAD}} {{.CONTAINER}}={{.VERSION}}"
 
   undo:
     desc: "回滚变更"
-    vars:
-      WORKLOAD: "{{.WORKLOAD}}"
-      CONTAINER: "{{.CONTAINER}}"
     cmds:
-      - "{{.KUBECTL}} rollout undo {{.WORKLOAD}}"
+      - "{{.KUBECTL}} rollout undo {{._WORKLOAD}}"
