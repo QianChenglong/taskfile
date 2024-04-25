@@ -7,6 +7,8 @@ vars:
   DOCKER_DIR: '{{default "_docker" .DOCKER_DIR}}' # 可选
   OUTPUT_DIR: '{{default "_output" .OUTPUT_DIR}}' # 可选
   VERSION_PACKAGE: "{{.VERSION_PACKAGE}}"
+  HOSTNAME:
+    sh: hostname
   LDFLAGS: >-
     -s -w -buildid=
     {{if .VERSION_PACKAGE}}
@@ -14,6 +16,9 @@ vars:
     -X {{.VERSION_PACKAGE}}.GitCommit={{.GIT_COMMIT}}
     -X {{.VERSION_PACKAGE}}.GitTreeState={{.GIT_TREE_STATE}}
     -X {{.VERSION_PACKAGE}}.BuildDate={{.GIT_BUILD_DATE}}
+    -X {{.VERSION_PACKAGE}}.BuildUser={{.USER}}
+    -X {{.VERSION_PACKAGE}}.BuildHost={{.HOSTNAME}}
+    -X {{.VERSION_PACKAGE}}.BuildJobURL={{.QCI_JOB_URL}}
     {{end}}
 
 tasks:

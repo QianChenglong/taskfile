@@ -26,6 +26,16 @@ tasks:
       - mkdir -p {{._DST_BIN}}
       - defer: rm -rfv {{._DOCKER_DIR}}
       - cp -vf {{._SRC_BIN}}  {{._DST_BIN}} || true # TODO: 支持可选复制
+      - |
+        cat <<EOF >{{._DOCKER_DIR}}/metadata
+        VERSION={{.VERSION}}
+        GIT_COMMIT={{.GIT_COMMIT}}
+        GIT_TREE_STATE={{.GIT_TREE_STATE}}
+        BUILD_DATE={{.GIT_BUILD_DATE}}
+        BUILD_USER={{.USER}}
+        BUILD_HOST={{.HOSTNAME}}
+        BUILD_JOB_URL={{.QCI_JOB_URL}}
+        EOF
       - >-
         docker build
         --tag {{._TARGET}}
