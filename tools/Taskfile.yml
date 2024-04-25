@@ -26,7 +26,7 @@ tasks:
     desc: "安装commitlint工具"
     internal: true
     cmds:
-      - npm install -g @commitlint/cli @commitlint/config-conventional
+      - npm install -g @commitlint/cli @commitlint/config-conventional > /dev/null 2>&1
       - >-
         echo 'extends: ["@commitlint/config-conventional"]' >.commitlintrc.yml
 
@@ -34,15 +34,16 @@ tasks:
     desc: "安装husky（git hooks管理工具）"
     internal: true
     cmds:
-      - npm install -g husky
-      - husky install
+      - npm install -g husky > /dev/null 2>&1
+      - husky install > /dev/null 2>&1
       - echo "npx --no -- commitlint --edit \$1" > .husky/commit-msg
+      - echo "task --yes --silent init >/dev/null &" > .husky/post-merge
 
   conventional-changelog:
     desc: "安装conventional-changelog（changelog生成工具）"
     internal: true
     cmds:
-      - npm install -g conventional-changelog-cli
+      - npm install -g conventional-changelog-cli > /dev/null 2>&1
 
   changelog:
     desc: "自动生成changelog"
