@@ -14,7 +14,13 @@ tasks:
 
   init:
     desc: "初始化项目工具"
-    deps: [husky, commitlint, conventional-changelog]
+    deps: [git, husky, commitlint, conventional-changelog]
+
+  git:
+    desc: "配置git"
+    internal: true
+    cmds:
+      - git config remote.origin.tagopt --tags
 
   commitlint:
     desc: "安装commitlint工具"
