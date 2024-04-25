@@ -23,6 +23,11 @@ env:
 dotenv: [".env", "{{.ENV}}/.env.", "{{.HOME}}/.env"]
 
 tasks:
+  init:
+    desc: "测试tools:init"
+    cmds:
+      - task: tools:init
+
   check:
     desc: "测试go:check"
     cmds:
