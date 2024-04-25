@@ -53,9 +53,9 @@ tasks:
         sh: >-
           echo {{._CURRENT_VERSION}} | sed 's/:.*/:{{.VERSION}}/'
     cmds:
-      - echo {{.CLUSTER_TYPE}}
       - echo "{{._CURRENT_VERSION}} => {{.VERSION}}"
       - "{{.KUBECTL}} set image {{._WORKLOAD}} {{.CONTAINER}}={{.VERSION}}"
+      - "{{.KUBECTL}} rollout restart {{._WORKLOAD}}"
 
   undo:
     desc: "回滚变更"

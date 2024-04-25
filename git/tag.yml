@@ -4,7 +4,7 @@ version: "3"
 
 vars:
   VERSION:
-    sh: "git describe --always --tags --dirty"
+    sh: '[ -n "$VERSION" ] && echo $VERSION || git describe --always --tags --dirty'
   LAST_VERSION:
     sh: "git describe --tags --abbrev=0 || true" # TODO: 考虑不存在tag的情况
   GIT_COMMIT:
