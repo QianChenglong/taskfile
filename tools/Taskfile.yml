@@ -1,0 +1,46 @@
+version: 3
+
+tasks:
+  install:
+    desc: "安装对应工具"
+    vars:
+      NAME: "{{.NAME}}"
+      CMD: >-
+        {{if .CMD}}{{.CMD}}
+        {{else}}brew install {{.NAME}}
+        {{end}}
+    cmds:
+      - which {{.NAME}} || {{.CMD}}
+
+  init:
+    desc: "初始化项目工具"
+    deps: [husky, commitlint, conventional-changelog]
+
+  commitlint:
+    desc: "安装commitlint工具"
+    internal: true
+    cmds:
+      - npm install -g @commitlint/cli @commitlint/config-conventional
+      - >-
+        echo 'extends: ["@commitlint/config-conventional"]' >.commitlintrc.yml
+
+  husky:
+    desc: "安装husky（git hooks管理工具）"
+    internal: true
+    cmds:
+      - npm install -g husky
+      - husky install
+      - echo "npx --no -- commitlint --edit \$1" > .husky/commit-msg
+
+  conventional-changelog:
+    desc: "安装conventional-changelog（changelog生成工具）"
+    internal: true
+    cmds:
+      - npm install -g conventional-changelog-cli
+
+  changelog:
+    desc: "自动生成changelog"
+    vars:
+      FILE: '{{default "CHANGELOG.md" .FILE}}'
+    cmds:
+      - conventional-changelog -p angular -i {{.FILE}} -s

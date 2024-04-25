@@ -1,7 +1,7 @@
 version: 3
 
 includes:
-  # docker: https://raw.githubusercontent.com/QianChenglong/taskfile/main/docker/Taskfile.yml
+  tools: ./tools/Taskfile.yml
   go: ./go/Taskfile.yml
   git: ./git/Taskfile.yml
   docker:
@@ -64,6 +64,7 @@ tasks:
       - task: kubectl:set-image
         vars:
           CONTAINER: service-controller
+          VERSION: test
           # IMAGE: nginx
 
   undo:
