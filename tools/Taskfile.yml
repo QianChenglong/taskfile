@@ -14,21 +14,13 @@ tasks:
 
   init:
     desc: "初始化项目工具"
-    deps: [git, husky, commitlint, conventional-changelog]
+    deps: [git, husky, golangci-lint, commitlint, conventional-changelog]
 
   git:
     desc: "配置git"
     internal: true
     cmds:
       - git config remote.origin.tagopt --tags
-
-  commitlint:
-    desc: "安装commitlint工具"
-    internal: true
-    cmds:
-      - npm install -g @commitlint/cli @commitlint/config-conventional > /dev/null 2>&1
-      - >-
-        echo 'extends: ["@commitlint/config-conventional"]' >.commitlintrc.yml
 
   husky:
     desc: "安装husky（git hooks管理工具）"
@@ -38,6 +30,20 @@ tasks:
       - husky install > /dev/null 2>&1
       - echo "npx --no -- commitlint --edit \$1" > .husky/commit-msg
       - echo "task --yes --silent init >/dev/null &" > .husky/post-merge
+
+  golangci-lint:
+    desc: "安装golangci-lint"
+    internal: true
+    cmds:
+      - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.58.0
+
+  commitlint:
+    desc: "安装commitlint工具"
+    internal: true
+    cmds:
+      - npm install -g @commitlint/cli @commitlint/config-conventional > /dev/null 2>&1
+      - >-
+        echo 'extends: ["@commitlint/config-conventional"]' >.commitlintrc.yml
 
   conventional-changelog:
     desc: "安装conventional-changelog（changelog生成工具）"
