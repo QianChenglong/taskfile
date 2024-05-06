@@ -51,7 +51,7 @@ tasks:
           {{.KUBECTL}} get {{._WORKLOAD}} -ojson | jq -r '.spec.template.spec.containers[] | select(.name == "{{.CONTAINER}}").image'
       VERSION:
         sh: >-
-          echo {{._CURRENT_VERSION}} | sed 's/:.*/:{{.VERSION}}/'
+          echo {{._CURRENT_VERSION}} | sed 's/:.*/:{{.VERSION}}-linux-amd64/'
     cmds:
       - echo "{{._CURRENT_VERSION}} => {{.VERSION}}"
       - "{{.KUBECTL}} set image {{._WORKLOAD}} {{.CONTAINER}}={{.VERSION}}"
