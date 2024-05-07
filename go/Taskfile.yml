@@ -4,6 +4,7 @@ env:
   CGO_ENABLED: 0
 
 vars:
+  VERSION: 1.22.2
   DOCKER_DIR: '{{default "_docker" .DOCKER_DIR}}' # 可选
   OUTPUT_DIR: '{{default "_output" .OUTPUT_DIR}}' # 可选
   VERSION_PACKAGE: "{{.VERSION_PACKAGE}}"
@@ -23,8 +24,25 @@ vars:
 
 tasks:
   check:
-    desc: "检查go mod"
+    desc: "检查"
+    silent: true
+    vars:
+      CURRENT_GO_VERSION:
+        sh: go version | awk '{print $3}' | sed 's/go//'
+      CURRENT_GO_MOD_VERSION:
+        sh: grep '^go ' go.mod | sed 's/go //'
+
     cmds:
+      - >
+        if [ "{{.CURRENT_GO_VERSION}}" != "{{.VERSION}}" ]; then
+          echo "当前go版本 {{.CURRENT_GO_VERSION}} 不满足期望版本 {{.VERSION}}"
+          exit 1
+        fi
+      - >
+        if [ "{{.CURRENT_GO_MOD_VERSION}}" != "{{.VERSION}}" ]; then
+          echo "当前go.mod go版本 {{.CURRENT_GO_MOD_VERSION}} 不满足期望版本 {{.VERSION}}"
+          exit 1
+        fi
       - go mod tidy
       - >
         if git status -s | grep -E 'go(.mod)|go(.sum)' ; then
