@@ -14,6 +14,7 @@ tasks:
 
   init:
     desc: "初始化项目工具"
+    silent: true
     deps: [git, husky, golangci-lint, commitlint, conventional-changelog]
 
   git:
@@ -34,8 +35,11 @@ tasks:
   golangci-lint:
     desc: "安装golangci-lint"
     internal: true
+    vars:
+      VERSION: 1.58.0
     cmds:
-      - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.58.0
+      - >
+        [ "$(golangci-lint version 2>/dev/null | awk '{print $4}')" == "{{.VERSION}}" ] || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v{{.VERSION}}
 
   commitlint:
     desc: "安装commitlint工具"
