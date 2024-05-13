@@ -4,7 +4,7 @@ env:
   CGO_ENABLED: 0
 
 vars:
-  VERSION: 1.22.2
+  GO_VERSION: 1.22.2
   DOCKER_DIR: '{{default "_docker" .DOCKER_DIR}}' # 可选
   OUTPUT_DIR: '{{default "_output" .OUTPUT_DIR}}' # 可选
   VERSION_PACKAGE: "{{.VERSION_PACKAGE}}"
@@ -34,13 +34,13 @@ tasks:
 
     cmds:
       - >
-        if [ "{{.CURRENT_GO_VERSION}}" != "{{.VERSION}}" ]; then
-          echo "当前go版本 {{.CURRENT_GO_VERSION}} 不满足期望版本 {{.VERSION}}"
+        if [ "{{.CURRENT_GO_VERSION}}" != "{{.GO_VERSION}}" ]; then
+          echo "当前go版本 {{.CURRENT_GO_VERSION}} 不满足期望版本 {{.GO_VERSION}}"
           exit 1
         fi
       - >
-        if [ "{{.CURRENT_GO_MOD_VERSION}}" != "{{.VERSION}}" ]; then
-          echo "当前go.mod go版本 {{.CURRENT_GO_MOD_VERSION}} 不满足期望版本 {{.VERSION}}"
+        if [ "{{.CURRENT_GO_MOD_VERSION}}" != "{{.GO_VERSION}}" ]; then
+          echo "当前go.mod go版本 {{.CURRENT_GO_MOD_VERSION}} 不满足期望版本 {{.GO_VERSION}}"
           exit 1
         fi
       - go mod tidy
