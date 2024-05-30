@@ -16,7 +16,8 @@ tasks:
       ARCH: '{{default "amd64" .ARCH}}' # 可选
       BASE: '{{default "alpine:3.17" .BASE}}' # 可选
       BUILD_ARGS: "BASE={{.BASE}} {{.BUILD_ARGS}}" # 可选，可额外指定构建参数
-      DOCKERFILE: '{{default "./Dockerfile" .DOCKERFILE}}' # 可选
+      DOCKERFILE:
+        sh: '[ -f ./Dockerfile ] && echo "./Dockerfile" || echo "build/docker/{{.NAME}}/Dockerfile"'
 
       _TARGET: "{{joinPath .REGISTRY_PREFIX .NAME}}:{{.TAG}}-{{.OS}}-{{.ARCH}}" # 自动生成，内部使用
       _DOCKER_DIR: "{{.DOCKER_DIR}}/{{.OS}}/{{.ARCH}}"
@@ -25,7 +26,8 @@ tasks:
     cmds:
       - mkdir -p {{._DST_BIN}}
       - defer: rm -rfv {{._DOCKER_DIR}}
-      - cp -vf {{._SRC_BIN}}  {{._DST_BIN}} || true # TODO: 支持可选复制
+      - "[ -f build/docker/{{.NAME}}/build.sh ] && DST_DIR={{._DOCKER_DIR}}/ build/docker/{{.NAME}}/build.sh || true"
+      - "[ -f {{._SRC_BIN}} ] && cp -vf {{._SRC_BIN}}  {{._DST_BIN}} || true"
       - |
         cat <<EOF >{{._DOCKER_DIR}}/metadata
         VERSION={{.VERSION}}
