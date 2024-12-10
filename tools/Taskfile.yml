@@ -36,10 +36,11 @@ tasks:
     desc: "安装golangci-lint"
     internal: true
     vars:
-      VERSION: 1.58.0
+      VERSION: 1.62.2
     cmds:
       - >
         [ "$(golangci-lint version 2>/dev/null | awk '{print $4}')" == "{{.VERSION}}" ] || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v{{.VERSION}}
+      - curl https://raw.githubusercontent.com/QianChenglong/taskfile/main/.golangci.yml >.golangci.yml
 
   commitlint:
     desc: "安装commitlint工具"

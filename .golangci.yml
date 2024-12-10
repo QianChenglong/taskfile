@@ -1,0 +1,40 @@
+run:
+  timeout: 10m
+  tests: true
+  modules-download-mode: readonly
+
+linters:
+ disable-all: true
+ enable:
+   - errcheck
+   - errname
+   - errorlint
+   - unused
+   - ineffassign
+   - govet
+   - typecheck
+   - revive
+   - unconvert
+   - staticcheck
+   - gosimple
+   - goconst
+   - predeclared
+   - whitespace
+   - exhaustive
+   - misspell
+
+issues:
+  exclude-rules:
+    - linters:
+        - staticcheck
+      text: "SA1019:"
+  new: true
+  new-from-rev: origin/master
+  fix: false
+
+linters-settings:
+  goconst:
+    min-len: 2
+    min-occurrences: 4
+  errcheck:
+    check-type-assertions: true

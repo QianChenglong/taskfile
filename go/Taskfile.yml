@@ -49,6 +49,12 @@ tasks:
           echo 'Error: must run `go mod tidy` before commit!';
           exit 1;
         fi
+      - task: lint
+
+  lint:
+    desc: "lint"
+    cmds:
+    - golangci-lint run
 
   build:
     desc: "构建二进制"
