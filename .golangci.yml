@@ -16,8 +16,9 @@ linters:
    - revive
    - unconvert
    - staticcheck
-   - gosimple
    - goconst
+   - goimports
+   - gosimple
    - predeclared
    - whitespace
    - exhaustive
@@ -33,8 +34,10 @@ issues:
   fix: false
 
 linters-settings:
+  errcheck:
+    check-type-assertions: true
   goconst:
     min-len: 2
     min-occurrences: 4
-  errcheck:
-    check-type-assertions: true
+  goimports:
+    local-prefixes: "{{ (ds "stdin").goimports.localPrefixes }}"

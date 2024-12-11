@@ -32,15 +32,27 @@ tasks:
       - echo "npx --no -- commitlint --edit \$1" > .husky/commit-msg
       - echo "task --yes --silent init >/dev/null &" > .husky/post-merge
 
+  gomplate:
+    desc: "安装gomplate"
+    cmds:
+      - task: install
+        vars:
+          NAME: gomplate
+
   golangci-lint:
     desc: "安装golangci-lint"
     internal: true
+    deps:
+      - gomplate
     vars:
       VERSION: 1.62.2
+      _MOD:
+        sh: go list -m
     cmds:
       - >
         [ "$(golangci-lint version 2>/dev/null | awk '{print $4}')" == "{{.VERSION}}" ] || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v{{.VERSION}}
-      - curl https://raw.githubusercontent.com/QianChenglong/taskfile/main/.golangci.yml >.golangci.yml
+      - >
+        echo '{"goimports": {"localPrefixes": "{{._MOD}}"}}' | gomplate --in "$(curl -s https://raw.githubusercontent.com/QianChenglong/taskfile/main/.golangci.yml)" -d stdin=stdin:///in.json >.golangci.yml
 
   commitlint:
     desc: "安装commitlint工具"
